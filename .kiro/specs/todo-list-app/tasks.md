@@ -147,7 +147,7 @@ Implement a single-page To Do List app using vanilla HTML5, CSS3, and JavaScript
     - Verify Tab order manually: Input → Add → task checkboxes → delete buttons → filter buttons
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-- [~] 11. Final checkpoint — Ensure all tests pass
+- [x] 11. Final checkpoint — Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
