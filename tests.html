@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>To Do List — Property-Based Tests</title>
+    <style>
+      body { font-family: 'Segoe UI', Roboto, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; background: #f5f5f5; }
+      h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+      .suite { background: #fff; border-radius: 6px; padding: 1rem 1.25rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+      .suite h2 { font-size: 1rem; margin: 0 0 0.5rem; }
+      .result { font-size: 0.9rem; padding: 0.4rem 0.6rem; border-radius: 4px; margin-top: 0.5rem; white-space: pre-wrap; font-family: monospace; }
+      .pass { background: #d1fae5; color: #065f46; }
+      .fail { background: #fee2e2; color: #991b1b; }
+      .running { background: #e0e7ff; color: #3730a3; }
+      summary { cursor: pointer; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <h1>Property-Based Tests — To Do List App</h1>
+    <p>Open this file in a browser to run all property tests.</p>
+    <div id="results"></div>
+
+    <!-- Mock localStorage so tests are isolated from real browser storage -->
+    <script>
+      (() => {
+        const store = {};
+        window._mockStorage = {
+          getItem: (k) => (k in store ? store[k] : null),
+          setItem: (k, v) => { store[k] = String(v); },
+          removeItem: (k) => { delete store[k]; },
+          clear: () => { for (const k in store) delete store[k]; },
+        };
+        // Patch localStorage globally so app.js uses the mock
+        Object.defineProperty(window, 'localStorage', {
+          value: window._mockStorage,
+          writable: true,
+        });
+      })();
+    </script>
+
+    <!-- Enable test mode before loading app.js -->
+    <script>window.__TODO_TEST_MODE__ = true;</script>
+
+    <!-- Load the app (IIFE runs immediately; _expose fires because test mode is on) -->
+    <script src="app.js"></script>
+
+    <!-- fast-check via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/fast-check@3.22.0/lib/bundle/fast-check.umd.js"></script>
+
+    <script>
+      // ─── Test harness utilities ───────────────────────────────────────────────
+
+      const { getTasks, setTasks, addTask, STORAGE_KEY } = window.__TODO_INTERNALS__;
+
+      /**
+       * Reset state before each property run so tests are independent.
+       * Clears the in-memory tasks array and the mock localStorage entry.
+       */
+      const resetState = () => {
+        setTasks([]);
+        window._mockStorage.clear();
+      };
+
+      const resultsEl = document.getElementById('results');
+
+      const renderResult = (title, passed, detail) => {
+        const suite = document.createElement('div');
+        suite.className = 'suite';
+        suite.innerHTML = `<h2>${title}</h2>`;
+        const result = document.createElement('div');
+        result.className = `result ${passed ? 'pass' : 'fail'}`;
+        result.textContent = passed ? `✓ Passed (100 runs)` : `✗ Failed\n${detail}`;
+        suite.appendChild(result);
+        resultsEl.appendChild(suite);
+      };
+
+      // ─── Property 1: Valid task addition grows the task list ──────────────────
+      // Feature: todo-list-app, Property 1: For any non-empty string of 1–500 characters
+      // (after trimming), calling addTask should increase tasks.length by exactly 1
+      // and the last element's description should equal the trimmed input.
+      // Validates: Requirements 1.1
+
+      (() => {
+        const title = 'P1 — Valid task addition grows the task list';
+
+        try {
+          // Arbitrary: non-empty strings whose trimmed length is between 1 and 500.
+          // We generate strings then filter to the valid range rather than trying to
+          // construct them perfectly, which keeps the generator simple.
+          const validDescription = fc.string({ minLength: 1, maxLength: 500 }).filter(
+            (s) => s.trim().length >= 1 && s.trim().length <= 500
+          );
+
+          fc.assert(
+            fc.property(validDescription, (description) => {
+              resetState();
+
+              const before = getTasks().length; // always 0 after reset, but keeps the property general
+              addTask(description);
+              const after = getTasks();
+
+              // List grew by exactly 1
+              if (after.length !== before + 1) return false;
+
+              // Last element has the correct (trimmed) description
+              const lastTask = after[after.length - 1];
+              if (lastTask.description !== description.trim()) return false;
+
+              return true;
+            }),
+            { numRuns: 100, seed: 42 }
+          );
+
+          renderResult(title, true, '');
+        } catch (err) {
+          renderResult(title, false, err.message ?? String(err));
+        }
+      })();
+    </script>
+    <script>
+      // ─── Property 3: Toggle is its own inverse (round-trip) ───────────────────
+      // Feature: todo-list-app, Property 3: For any non-empty task list and any
+      // task within it, calling toggleTask twice in a row must leave the task's
+      // `completed` status identical to its original value.
+      // Validates: Requirements 2.1, 2.2
+
+      (() => {
+        const title = 'P3 — Toggle round-trip (toggle twice = no change)';
+
+        try {
+          const { getTasks, setTasks, toggleTask } = window.__TODO_INTERNALS__;
+          const taskRecord = fc.record({
+            id: fc.uuidV(4),
+            description: fc.string({ minLength: 1, maxLength: 50 }).filter(
+              (s) => s.trim().length > 0
+            ),
+            completed: fc.boolean(),
+            createdAt: fc.integer({ min: 0 }),
+          });
+
+          const taskArrayAndIndex = fc
+            .array(taskRecord, { minLength: 1 })
+            .chain((arr) =>
+              fc.tuple(
+                fc.constant(arr),
+                fc.integer({ min: 0, max: arr.length - 1 })
+              )
+            );
+
+          fc.assert(
+            fc.property(taskArrayAndIndex, ([taskArray, index]) => {
+              resetState();
+
+              // Deep-copy so the original reference is not mutated between runs
+              const copy = taskArray.map((t) => ({ ...t }));
+              setTasks(copy);
+
+              const target = getTasks()[index];
+              const originalCompleted = target.completed;
+
+              // Two toggles must be a no-op
+              toggleTask(target.id);
+              toggleTask(target.id);
+
+              const afterTask = getTasks().find((t) => t.id === target.id);
+              return afterTask !== undefined && afterTask.completed === originalCompleted;
+            }),
+            { numRuns: 100, seed: 42 }
+          );
+
+          renderResult(title, true, '');
+        } catch (err) {
+          renderResult(title, false, err.message ?? String(err));
+        }
+      })();
+    </script>
+
+    <script>
+      // ─── Property 2: Invalid input is rejected, list unchanged ────────────────
+      // Feature: todo-list-app, Property 2: For any whitespace-only string or any
+      // string longer than 500 characters, calling addTask should leave the tasks
+      // array completely unchanged (no task is added).
+      // Validates: Requirements 1.2
+
+      (() => {
+        const title = 'P2 — Invalid input rejected, list unchanged';
+
+        try {
+          // Arbitrary: either a whitespace-only string (trimmed length === 0)
+          // or a string longer than 500 chars.
+          const invalidDescription = fc.oneof(
+            // Whitespace-only: replace every non-whitespace char with a space
+            fc.string({ minLength: 0, maxLength: 100 }).map((s) =>
+              s.replace(/\S/g, ' ')
+            ),
+            // Too long: 501–600 characters
+            fc.string({ minLength: 501, maxLength: 600 })
+          );
+
+          fc.assert(
+            fc.property(invalidDescription, (description) => {
+              resetState();
+
+              const before = getTasks().length; // always 0 after reset
+              addTask(description);
+              const after = getTasks().length;
+
+              // List must not grow
+              return after === before;
+            }),
+            { numRuns: 100, seed: 42 }
+          );
+
+          renderResult(title, true, '');
+        } catch (err) {
+          renderResult(title, false, err.message ?? String(err));
+        }
+      })();
+    </script>
+
+    <script>
+      // ─── Property 5: Every mutation is immediately reflected in localStorage ──
+      // Feature: todo-list-app, Property 5: For any sequence of task mutations
+      // (add, toggle, delete), after each individual mutation the value stored at
+      // the STORAGE_KEY in localStorage, when parsed as JSON, must be deeply equal
+      // to the current in-memory tasks array.
+      // Validates: Requirements 1.4, 2.3, 3.2, 5.3
+
+      (() => {
+        const title = 'P5 — Mutation persistence round-trip';
+
+        /**
+         * Deep-equal comparison for plain objects / arrays.
+         * Sufficient for Task objects which only hold primitives.
+         */
+        const deepEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+        /**
+         * Read and parse the current tasks from the mock localStorage.
+         * Returns null if the key is absent or the value is invalid JSON.
+         */
+        const readStoredTasks = () => {
+          const { getTasks: _gt, STORAGE_KEY: _sk } = window.__TODO_INTERNALS__;
+          const raw = window._mockStorage.getItem(_sk);
+          try {
+            return raw !== null ? JSON.parse(raw) : null;
+          } catch {
+            return null;
+          }
+        };
+
+        try {
+          const { getTasks, setTasks, addTask, toggleTask, deleteTask, STORAGE_KEY } =
+            window.__TODO_INTERNALS__;
+
+          // Generator: valid non-empty description strings (1–500 trimmed chars)
+          const validDesc = fc
+            .string({ minLength: 1, maxLength: 500 })
+            .filter((s) => s.trim().length >= 1 && s.trim().length <= 500);
+
+          // Generator: one of three mutation kinds
+          // 'add'    — add a new task using a random description
+          // 'toggle' — toggle a random existing task (no-op if list is empty)
+          // 'delete' — delete a random existing task (no-op if list is empty)
+          const mutationArb = fc.oneof(
+            fc.record({ kind: fc.constant('add'), description: validDesc }),
+            fc.record({ kind: fc.constant('toggle') }),
+            fc.record({ kind: fc.constant('delete') })
+          );
+
+          // A run consists of 1–10 sequential mutations
+          const mutationSequenceArb = fc.array(mutationArb, { minLength: 1, maxLength: 10 });
+
+          fc.assert(
+            fc.property(mutationSequenceArb, (mutations) => {
+              resetState();
+
+              for (const mutation of mutations) {
+                if (mutation.kind === 'add') {
+                  addTask(mutation.description);
+                } else if (mutation.kind === 'toggle') {
+                  const current = getTasks();
+                  if (current.length === 0) continue;
+                  // Pick a stable index using a deterministic approach within the property
+                  const target = current[0];
+                  toggleTask(target.id);
+                } else {
+                  // delete
+                  const current = getTasks();
+                  if (current.length === 0) continue;
+                  const target = current[0];
+                  deleteTask(target.id);
+                }
+
+                // After every individual mutation, localStorage must mirror in-memory state
+                const stored = readStoredTasks();
+                const inMemory = getTasks();
+
+                if (stored === null) return false;
+                if (!deepEqual(stored, inMemory)) return false;
+              }
+
+              return true;
+            }),
+            { numRuns: 100, seed: 42 }
+          );
+
+          renderResult(title, true, '');
+        } catch (err) {
+          renderResult(title, false, err.message ?? String(err));
+        }
+      })();
+    </script>
+
+    <script>
+      // ─── Property 9: Initialization loads the persisted task list ─────────────
+      // Feature: todo-list-app, Property 9: For any valid JSON task array written
+      // to localStorage under STORAGE_KEY, calling loadTasks() should produce an
+      // in-memory tasks array that is deeply equal to the array that was stored.
+      // Validates: Requirements 5.1
+
+      (() => {
+        const title = 'P9 — Initialization loads the persisted task list';
+
+        const deepEqual = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+        try {
+          const { getTasks, setTasks, loadTasks, STORAGE_KEY } = window.__TODO_INTERNALS__;
+
+          // Generator: a single Task object with valid field shapes
+          const taskArb = fc.record({
+            id: fc.uuidV(4),
+            description: fc
+              .string({ minLength: 1, maxLength: 500 })
+              .filter((s) => s.trim().length >= 1),
+            completed: fc.boolean(),
+            createdAt: fc.integer({ min: 0, max: Number.MAX_SAFE_INTEGER }),
+          });
+
+          // Generator: an array of 0–20 tasks (covers empty list and larger lists)
+          const taskArrayArb = fc.array(taskArb, { minLength: 0, maxLength: 20 });
+
+          fc.assert(
+            fc.property(taskArrayArb, (storedTasks) => {
+              // Arrange: write the generated task array directly to mock localStorage
+              // and reset in-memory state so loadTasks has something meaningful to load.
+              window._mockStorage.clear();
+              window._mockStorage.setItem(STORAGE_KEY, JSON.stringify(storedTasks));
+              setTasks([]); // ensure in-memory state is empty before loading
+
+              // Act: initialize as the app would on page load
+              loadTasks();
+
+              // Assert: in-memory tasks must deeply equal what was stored
+              return deepEqual(getTasks(), storedTasks);
+            }),
+            { numRuns: 100, seed: 42 }
+          );
+
+          renderResult(title, true, '');
+        } catch (err) {
+          renderResult(title, false, err.message ?? String(err));
+        }
+      })();
+    </script>
+    <script>
+      // ─── Property 4: Deleting a task removes it from the list ─────────────────
+      // Feature: todo-list-app, Property 4: For any non-empty task list, picking
+      // any task by index and calling deleteTask(id) should leave the list exactly
+      // one element shorter and contain no element with that id.
+      // Validates: Requirements 3.1
+
+      (() => {
+        const title = 'P4 — Delete removes task';
+        const { getTasks, setTasks, deleteTask } = window.__TODO_INTERNALS__;
+
+        try {
+          const taskRecord = fc.record({
+            id: fc.uuidV(4),
+            description: fc.string({ minLength: 1, maxLength: 50 }).filter(s => s.trim().length > 0),
+            completed: fc.boolean(),
+            createdAt: fc.integer({ min: 0 }),
+          });
+
+          const taskArrayArb = fc.array(taskRecord, { minLength: 1 });
+
+          fc.assert(
+            fc.property(taskArrayArb, fc.integer({ min: 0 }), (taskArray, rawIndex) => {
+              resetState();
+              setTasks([...taskArray]);
+
+              const index = rawIndex % taskArray.length;
+              const deletedId = taskArray[index].id;
+              const before = getTasks().length;
+
+              deleteTask(deletedId);
+
+              const after = getTasks();
+
+              // List is exactly one shorter
+              if (after.length !== before - 1) return false;
+
+              // Deleted task is no longer present
+              if (after.some(t => t.id === deletedId)) return false;
+
+              return true;
+            }),
+            { numRuns: 100, seed: 42 }
+          );
+
+          renderResult(title, true, '');
+        } catch (err) {
+          renderResult(title, false, err.message ?? String(err));
+        }
+      })();
+    </script>
+  </body>
+</html>

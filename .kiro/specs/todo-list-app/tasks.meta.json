@@ -1,0 +1,196 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Write semantic HTML structure with `<main>`, `<section>`, `<ul>`, `<footer>`, and all interactive elements": [
+      {
+        "executionId": "970e9766-3b57-4a7a-a792-ef9903c71dae",
+        "chatSessionId": "sess_31d03d76-d835-45f9-866d-9dc4d10725ba",
+        "timestamp": 1789999381285
+      },
+      {
+        "executionId": "970e9766-3b57-4a7a-a792-ef9903c71dae",
+        "chatSessionId": "sess_31d03d76-d835-45f9-866d-9dc4d10725ba",
+        "timestamp": 1789999421217
+      }
+    ],
+    "1. Create the HTML skeleton (`index.html`)": [
+      {
+        "executionId": "970e9766-3b57-4a7a-a792-ef9903c71dae",
+        "chatSessionId": "sess_31d03d76-d835-45f9-866d-9dc4d10725ba",
+        "timestamp": 1789999421303
+      }
+    ],
+    "2.1 Define CSS custom properties and base layout": [
+      {
+        "executionId": "a44dd023-5483-4160-ade3-c400f4d4f908",
+        "chatSessionId": "sess_fd1c09a1-2e45-463e-b300-89b4e76acee0",
+        "timestamp": 1790000285569
+      },
+      {
+        "executionId": "a44dd023-5483-4160-ade3-c400f4d4f908",
+        "chatSessionId": "sess_fd1c09a1-2e45-463e-b300-89b4e76acee0",
+        "timestamp": 1790000421235
+      }
+    ],
+    "2.2 Style the input section, task list, and filter footer": [
+      {
+        "executionId": "a44dd023-5483-4160-ade3-c400f4d4f908",
+        "chatSessionId": "sess_fd1c09a1-2e45-463e-b300-89b4e76acee0",
+        "timestamp": 1790000291255
+      },
+      {
+        "executionId": "a44dd023-5483-4160-ade3-c400f4d4f908",
+        "chatSessionId": "sess_fd1c09a1-2e45-463e-b300-89b4e76acee0",
+        "timestamp": 1790000426994
+      }
+    ],
+    "2.3 Style completed tasks, delete button visibility, and focus rings": [
+      {
+        "executionId": "a44dd023-5483-4160-ade3-c400f4d4f908",
+        "chatSessionId": "sess_fd1c09a1-2e45-463e-b300-89b4e76acee0",
+        "timestamp": 1790000291800
+      },
+      {
+        "executionId": "a44dd023-5483-4160-ade3-c400f4d4f908",
+        "chatSessionId": "sess_fd1c09a1-2e45-463e-b300-89b4e76acee0",
+        "timestamp": 1790000432898
+      }
+    ],
+    "2. Create the CSS stylesheet (`style.css`)": [
+      {
+        "executionId": "a44dd023-5483-4160-ade3-c400f4d4f908",
+        "chatSessionId": "sess_fd1c09a1-2e45-463e-b300-89b4e76acee0",
+        "timestamp": 1790000432935
+      }
+    ],
+    "3.1 Set up the module-scoped state block and `loadTasks` / `saveTasks`": [
+      {
+        "executionId": "57738c8b-8e61-4afe-a0dc-8b863693371a",
+        "chatSessionId": "sess_2064df05-2d34-430f-8ba4-29c17335d1a9",
+        "timestamp": 1790000476683
+      },
+      {
+        "executionId": "57738c8b-8e61-4afe-a0dc-8b863693371a",
+        "chatSessionId": "sess_2064df05-2d34-430f-8ba4-29c17335d1a9",
+        "timestamp": 1790000529895
+      }
+    ],
+    "4.1 Implement `addTask(description)`": [
+      {
+        "executionId": "b71ad507-3fd2-4704-a53c-ba44496098a2",
+        "chatSessionId": "sess_b656ceef-50e0-4490-8d09-3543a04f8856",
+        "timestamp": 1790000569584
+      },
+      {
+        "executionId": "b71ad507-3fd2-4704-a53c-ba44496098a2",
+        "chatSessionId": "sess_b656ceef-50e0-4490-8d09-3543a04f8856",
+        "timestamp": 1790000617431
+      }
+    ],
+    "4.4 Implement `toggleTask(id)`": [
+      {
+        "executionId": "b71ad507-3fd2-4704-a53c-ba44496098a2",
+        "chatSessionId": "sess_b656ceef-50e0-4490-8d09-3543a04f8856",
+        "timestamp": 1790000570265
+      },
+      {
+        "executionId": "b71ad507-3fd2-4704-a53c-ba44496098a2",
+        "chatSessionId": "sess_b656ceef-50e0-4490-8d09-3543a04f8856",
+        "timestamp": 1790000617717
+      }
+    ],
+    "4.6 Implement `deleteTask(id)`": [
+      {
+        "executionId": "b71ad507-3fd2-4704-a53c-ba44496098a2",
+        "chatSessionId": "sess_b656ceef-50e0-4490-8d09-3543a04f8856",
+        "timestamp": 1790000570312
+      },
+      {
+        "executionId": "b71ad507-3fd2-4704-a53c-ba44496098a2",
+        "chatSessionId": "sess_b656ceef-50e0-4490-8d09-3543a04f8856",
+        "timestamp": 1790000618330
+      }
+    ],
+    "4.2 Write property test for P1 — Valid addition grows list": [
+      {
+        "executionId": "fd7ded5e-b44d-4a3e-9f3a-053187ce58c3",
+        "chatSessionId": "sess_4110719b-8d5c-43d9-a141-1e7a942d8983",
+        "timestamp": 1790001196926
+      },
+      {
+        "executionId": "fd7ded5e-b44d-4a3e-9f3a-053187ce58c3",
+        "chatSessionId": "sess_4110719b-8d5c-43d9-a141-1e7a942d8983",
+        "timestamp": 1790001347271
+      }
+    ],
+    "3.2 Write property test for P5 — Mutation persistence round-trip and P9 — Init loads persisted list": [
+      {
+        "executionId": "cd64ed09-5dcf-4554-ac7e-8ac27beb0b5f",
+        "chatSessionId": "sess_71a5af06-2b4b-4ce3-975e-ee29c9806c70",
+        "timestamp": 1790002221073
+      },
+      {
+        "executionId": "cd64ed09-5dcf-4554-ac7e-8ac27beb0b5f",
+        "chatSessionId": "sess_71a5af06-2b4b-4ce3-975e-ee29c9806c70",
+        "timestamp": 1790004510715
+      }
+    ],
+    "4.3 Write property test for P2 — Invalid input rejected, list unchanged": [
+      {
+        "executionId": "cd64ed09-5dcf-4554-ac7e-8ac27beb0b5f",
+        "chatSessionId": "sess_71a5af06-2b4b-4ce3-975e-ee29c9806c70",
+        "timestamp": 1790002221760
+      },
+      {
+        "executionId": "cd64ed09-5dcf-4554-ac7e-8ac27beb0b5f",
+        "chatSessionId": "sess_71a5af06-2b4b-4ce3-975e-ee29c9806c70",
+        "timestamp": 1790004511380
+      }
+    ],
+    "4.5 Write property test for P3 — Toggle round-trip": [
+      {
+        "executionId": "cd64ed09-5dcf-4554-ac7e-8ac27beb0b5f",
+        "chatSessionId": "sess_71a5af06-2b4b-4ce3-975e-ee29c9806c70",
+        "timestamp": 1790002222357
+      },
+      {
+        "executionId": "cd64ed09-5dcf-4554-ac7e-8ac27beb0b5f",
+        "chatSessionId": "sess_71a5af06-2b4b-4ce3-975e-ee29c9806c70",
+        "timestamp": 1790004511958
+      }
+    ],
+    "4.7 Write property test for P4 — Delete removes task": [
+      {
+        "executionId": "cd64ed09-5dcf-4554-ac7e-8ac27beb0b5f",
+        "chatSessionId": "sess_71a5af06-2b4b-4ce3-975e-ee29c9806c70",
+        "timestamp": 1790002222829
+      },
+      {
+        "executionId": "cd64ed09-5dcf-4554-ac7e-8ac27beb0b5f",
+        "chatSessionId": "sess_71a5af06-2b4b-4ce3-975e-ee29c9806c70",
+        "timestamp": 1790004512655
+      }
+    ],
+    "3. Implement core state and storage (`app.js` — state, load, save)": [
+      {
+        "executionId": "cd64ed09-5dcf-4554-ac7e-8ac27beb0b5f",
+        "chatSessionId": "sess_71a5af06-2b4b-4ce3-975e-ee29c9806c70",
+        "timestamp": 1790004510757
+      }
+    ],
+    "4. Implement task mutation functions (`addTask`, `toggleTask`, `deleteTask`)": [
+      {
+        "executionId": "cd64ed09-5dcf-4554-ac7e-8ac27beb0b5f",
+        "chatSessionId": "sess_71a5af06-2b4b-4ce3-975e-ee29c9806c70",
+        "timestamp": 1790004512704
+      }
+    ],
+    "5. Checkpoint — Verify state and storage logic": [
+      {
+        "executionId": "cd64ed09-5dcf-4554-ac7e-8ac27beb0b5f",
+        "chatSessionId": "sess_71a5af06-2b4b-4ce3-975e-ee29c9806c70",
+        "timestamp": 1790004519400
+      }
+    ]
+  }
+}
