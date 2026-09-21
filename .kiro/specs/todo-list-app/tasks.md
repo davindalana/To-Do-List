@@ -100,35 +100,35 @@ Implement a single-page To Do List app using vanilla HTML5, CSS3, and JavaScript
     - Generate random task lists; for `'active'` assert all results have `completed === false`; for `'completed'` assert all results have `completed === true`
     - Tag: `// Feature: todo-list-app, Property 7: ...`
 
-- [~] 7. Implement DOM rendering (`renderTasks`, `renderFilterButtons`, `createTaskElement`)
-  - [ ] 7.1 Implement `createTaskElement(task)`
+- [x] 7. Implement DOM rendering (`renderTasks`, `renderFilterButtons`, `createTaskElement`)
+  - [x] 7.1 Implement `createTaskElement(task)`
     - Create an `<li class="task-item">` with `data-id` attribute
     - Include a `<input type="checkbox" class="task-checkbox">` (checked if `task.completed`) with `aria-label` set to the task description
     - Include a `<span>` for the task description text
     - Include a `<button class="btn-delete" aria-label="Delete task">` with a visible icon or text
     - Apply the completed styling class when `task.completed` is true
     - _Requirements: 2.4, 3.4, 6.1, 6.3_
-  - [ ] 7.2 Implement `renderTasks()`
+  - [x] 7.2 Implement `renderTasks()`
     - Call `getFilteredTasks()` to get the visible subset
     - Clear and rebuild `#task-list` by calling `createTaskElement` for each task and appending to the `<ul>`
     - Toggle visibility of `#empty-state` based on whether the filtered list is empty
     - _Requirements: 3.3, 4.3, 4.4, 4.5, 4.7_
-  - [ ] 7.3 Implement `renderFilterButtons()`
+  - [x] 7.3 Implement `renderFilterButtons()`
     - For each `.filter-btn`, add the `active` CSS class if its `data-filter` matches `currentFilter`, remove it otherwise
     - _Requirements: 4.2, 4.6_
-  - [ ] 7.4 Write property test for P8 — Empty filter result shows empty state
+  - [x] 7.4 Write property test for P8 — Empty filter result shows empty state
     - **Property 8: A filter that matches no tasks produces the empty state**
     - **Validates: Requirements 3.3, 4.7**
     - Generate task lists and filters that match no tasks; call `renderTasks()`; assert `#empty-state` is visible and `#task-list` contains zero `<li>` elements
     - Tag: `// Feature: todo-list-app, Property 8: ...`
-  - [ ] 7.5 Write property test for P10 — Buttons without visible text have aria-label
+  - [x] 7.5 Write property test for P10 — Buttons without visible text have aria-label
     - **Property 10: Every button without visible text has an aria-label**
     - **Validates: Requirements 6.3**
     - Enumerate all rendered `<button>` elements in each filter state; assert every button with empty or absent `textContent` has a non-empty `aria-label` attribute
     - Tag: `// Feature: todo-list-app, Property 10: ...`
 
-- [ ] 8. Wire up event listeners and initialize the app
-  - [ ] 8.1 Attach all event listeners and call initialization
+- [x] 8. Wire up event listeners and initialize the app
+  - [x] 8.1 Attach all event listeners and call initialization
     - `click` on `#add-btn` → `addTask(input.value)`
     - `keydown` (Enter) on `#task-input` → `addTask(input.value)`
     - Delegated `change` on `#task-list` for `.task-checkbox` → `toggleTask(dataset.id)`
@@ -137,17 +137,17 @@ Implement a single-page To Do List app using vanilla HTML5, CSS3, and JavaScript
     - Call `loadTasks()` then `renderTasks()` and `renderFilterButtons()` on `DOMContentLoaded`
     - _Requirements: 1.1, 2.1, 3.1, 4.1, 4.2, 5.1, 6.1_
 
-- [ ] 9. Checkpoint — Full integration verification
+- [x] 9. Checkpoint — Full integration verification
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Accessibility audit
-  - [ ] 10.1 Add axe-core accessibility audit to test harness
+- [x] 10. Accessibility audit
+  - [x] 10.1 Add axe-core accessibility audit to test harness
     - Load axe-core via CDN `<script>` tag in the test harness HTML file
     - Run `axe.run()` against the rendered page in each filter state (`all`, `active`, `completed`) and assert zero violations
     - Verify Tab order manually: Input → Add → task checkboxes → delete buttons → filter buttons
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-- [ ] 11. Final checkpoint — Ensure all tests pass
+- [~] 11. Final checkpoint — Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

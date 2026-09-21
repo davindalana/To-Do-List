@@ -21,6 +21,21 @@
     <p>Open this file in a browser to run all property tests.</p>
     <div id="results"></div>
 
+    <!--
+      Hidden DOM container — provides #task-list, #empty-state, and .filter-btn elements
+      so that renderTasks() and renderFilterButtons() have real DOM nodes to operate on
+      during property tests. Positioned off-screen so it doesn't affect the visible page.
+    -->
+    <div id="test-dom-container" style="display:block; position:absolute; left:-9999px;" aria-hidden="true">
+      <ul id="task-list" role="list"></ul>
+      <p id="empty-state"></p>
+      <footer class="filter-section">
+        <button class="filter-btn" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="active">Active</button>
+        <button class="filter-btn" data-filter="completed">Completed</button>
+      </footer>
+    </div>
+
     <!-- Mock localStorage so tests are isolated from real browser storage -->
     <script>
       (() => {
@@ -45,8 +60,11 @@
     <!-- Load the app (IIFE runs immediately; _expose fires because test mode is on) -->
     <script src="app.js"></script>
 
-    <!-- fast-check via CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/fast-check@3.22.0/lib/bundle/fast-check.umd.js"></script>
+    <!-- fast-check — local bundle (fast-check@3.22.0, esbuild IIFE build, global name: fc) -->
+    <script src="fast-check.umd.js"></script>
+
+    <!-- axe-core — accessibility audit engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.9.1/axe.min.js"></script>
 
     <script>
       // ─── Test harness utilities ───────────────────────────────────────────────
@@ -188,14 +206,20 @@
 
         try {
           // Arbitrary: either a whitespace-only string (trimmed length === 0)
-          // or a string longer than 500 chars.
+          // or a string whose *trimmed* length exceeds 500 characters.
+          // Note: addTask validates trimmed length, so "too long" must mean
+          // trimmed.length > 500 — a raw string > 500 that is mostly whitespace
+          // could trim down to a valid description, so we filter explicitly.
           const invalidDescription = fc.oneof(
             // Whitespace-only: replace every non-whitespace char with a space
             fc.string({ minLength: 0, maxLength: 100 }).map((s) =>
               s.replace(/\S/g, ' ')
             ),
-            // Too long: 501–600 characters
-            fc.string({ minLength: 501, maxLength: 600 })
+            // Too long after trimming: generate strings whose trimmed length is > 500.
+            // Strategy: start with 501–600 non-whitespace chars so trim doesn't shorten below 501.
+            fc.string({ minLength: 501, maxLength: 600 }).filter(
+              (s) => s.trim().length > 500
+            )
           );
 
           fc.assert(
@@ -501,6 +525,167 @@
           renderResult(title, true, '');
         } catch (err) {
           renderResult(title, false, err.message ?? String(err));
+        }
+      })();
+    </script>
+    <script>
+      // ─── Property 8: Empty filter result shows the empty state ────────────────
+      // Feature: todo-list-app, Property 8: A filter that matches no tasks produces the empty state
+      // For any task list and a filter that matches none of its tasks, renderTasks()
+      // should show #empty-state and #task-list should contain zero <li> elements.
+      // Validates: Requirements 3.3, 4.7
+
+      (() => {
+        const title = 'P8 — Empty filter result shows empty state';
+
+        try {
+          const { setTasks, setCurrentFilter, renderTasks } = window.__TODO_INTERNALS__;
+
+          const taskRecord = fc.record({
+            id: fc.uuidV(4),
+            description: fc.string({ minLength: 1, maxLength: 50 }).filter(
+              (s) => s.trim().length > 0
+            ),
+            // completed field is overridden per scenario below
+            completed: fc.boolean(),
+            createdAt: fc.integer({ min: 0 }),
+          });
+
+          // Scenario A: all tasks completed=true → filter 'active' matches nothing
+          const scenarioA = fc
+            .array(taskRecord, { minLength: 0, maxLength: 10 })
+            .map((arr) => arr.map((t) => ({ ...t, completed: true })))
+            .map((arr) => ({ taskArray: arr, filter: 'active' }));
+
+          // Scenario B: all tasks completed=false → filter 'completed' matches nothing
+          const scenarioB = fc
+            .array(taskRecord, { minLength: 0, maxLength: 10 })
+            .map((arr) => arr.map((t) => ({ ...t, completed: false })))
+            .map((arr) => ({ taskArray: arr, filter: 'completed' }));
+
+          fc.assert(
+            fc.property(fc.oneof(scenarioA, scenarioB), ({ taskArray, filter }) => {
+              resetState();
+              setTasks(taskArray.map((t) => ({ ...t })));
+              setCurrentFilter(filter);
+
+              renderTasks();
+
+              const emptyState = document.querySelector('#empty-state');
+              const listItems = document.querySelectorAll('#task-list li');
+
+              // #empty-state must be visible (display set to 'block')
+              if (emptyState.style.display !== 'block') return false;
+
+              // #task-list must contain no <li> elements
+              if (listItems.length !== 0) return false;
+
+              return true;
+            }),
+            { numRuns: 100, seed: 42 }
+          );
+
+          renderResult(title, true, '');
+        } catch (err) {
+          renderResult(title, false, err.message ?? String(err));
+        }
+      })();
+    </script>
+
+    <script>
+      // ─── Property 10: Buttons without visible text have aria-label ────────────
+      // Feature: todo-list-app, Property 10: Every button without visible text has an aria-label
+      // For any rendered state of the app, every <button> whose trimmed textContent is
+      // empty must have a non-empty aria-label attribute.
+      // Validates: Requirements 6.3
+
+      (() => {
+        const title = 'P10 — Buttons without visible text have aria-label';
+
+        try {
+          const { setTasks, setCurrentFilter, renderTasks } = window.__TODO_INTERNALS__;
+
+          const taskRecord = fc.record({
+            id: fc.uuidV(4),
+            description: fc.string({ minLength: 1, maxLength: 50 }).filter(
+              (s) => s.trim().length > 0
+            ),
+            completed: fc.boolean(),
+            createdAt: fc.integer({ min: 0 }),
+          });
+
+          const taskArrayArb = fc.array(taskRecord, { minLength: 0, maxLength: 10 });
+
+          fc.assert(
+            fc.property(taskArrayArb, (taskArray) => {
+              for (const filter of ['all', 'active', 'completed']) {
+                resetState();
+                setTasks(taskArray.map((t) => ({ ...t })));
+                setCurrentFilter(filter);
+                renderTasks();
+
+                const buttons = document.querySelectorAll('button');
+                for (const btn of buttons) {
+                  if (btn.textContent.trim() === '') {
+                    const label = btn.getAttribute('aria-label');
+                    if (!label || label.trim() === '') return false;
+                  }
+                }
+              }
+              return true;
+            }),
+            { numRuns: 100, seed: 42 }
+          );
+
+          renderResult(title, true, '');
+        } catch (err) {
+          renderResult(title, false, err.message ?? String(err));
+        }
+      })();
+    </script>
+    <script>
+      // ─── Accessibility audit — axe-core ───────────────────────────────────────
+      // Feature: todo-list-app, Accessibility audit: run axe-core against the
+      // rendered test container in each filter state and assert zero violations.
+      // Validates: Requirements 6.1, 6.2, 6.3, 6.4
+
+      (async () => {
+        const { setTasks, setCurrentFilter, renderTasks, renderFilterButtons } =
+          window.__TODO_INTERNALS__;
+
+        const container = document.getElementById('test-dom-container');
+
+        // Sample tasks: 2 active + 1 completed so every filter state is non-empty
+        const sampleTasks = [
+          { id: 'a1b2c3d4-0000-4000-8000-000000000001', description: 'Buy groceries',   completed: false, createdAt: 1000 },
+          { id: 'a1b2c3d4-0000-4000-8000-000000000002', description: 'Write unit tests', completed: false, createdAt: 2000 },
+          { id: 'a1b2c3d4-0000-4000-8000-000000000003', description: 'Read a book',      completed: true,  createdAt: 3000 },
+        ];
+
+        for (const filter of ['all', 'active', 'completed']) {
+          const title = `A11y — axe-core audit: ${filter} filter`;
+
+          // Arrange: reset, load sample tasks, set filter, render
+          resetState();
+          setTasks(sampleTasks.map(t => ({ ...t })));
+          setCurrentFilter(filter);
+          renderTasks();
+          renderFilterButtons();
+
+          try {
+            const results = await axe.run(container);
+
+            if (results.violations.length === 0) {
+              renderResult(title, true, '');
+            } else {
+              const detail = results.violations
+                .map(v => `[${v.id}] ${v.help} (${v.nodes.length} node${v.nodes.length !== 1 ? 's' : ''})`)
+                .join('\n');
+              renderResult(title, false, detail);
+            }
+          } catch (err) {
+            renderResult(title, false, err.message ?? String(err));
+          }
         }
       })();
     </script>
