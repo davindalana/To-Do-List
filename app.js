@@ -68,6 +68,18 @@
     if (typeof renderTasks === 'function') renderTasks();
   };
 
+  const getFilteredTasks = () => {
+    if (currentFilter === 'active') return tasks.filter(t => !t.completed);
+    if (currentFilter === 'completed') return tasks.filter(t => t.completed);
+    return tasks; // 'all'
+  };
+
+  const setFilter = (filter) => {
+    currentFilter = filter;
+    if (typeof renderTasks === 'function') renderTasks();
+    if (typeof renderFilterButtons === 'function') renderFilterButtons();
+  };
+
   // Expose internal state and functions for property-based testing.
   _expose({
     getTasks: () => tasks,
@@ -77,6 +89,8 @@
     addTask,
     toggleTask,
     deleteTask,
+    getFilteredTasks,
+    setFilter,
     loadTasks,
     saveTasks,
     STORAGE_KEY,

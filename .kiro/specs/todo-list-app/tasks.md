@@ -84,23 +84,23 @@ Implement a single-page To Do List app using vanilla HTML5, CSS3, and JavaScript
 - [x] 5. Checkpoint — Verify state and storage logic
   - Ensure all tests pass, ask the user if questions arise.
 
-- [~] 6. Implement filter functions (`setFilter`, `getFilteredTasks`)
-  - [ ] 6.1 Implement `setFilter(filter)` and `getFilteredTasks()`
+- [x] 6. Implement filter functions (`setFilter`, `getFilteredTasks`)
+  - [x] 6.1 Implement `setFilter(filter)` and `getFilteredTasks()`
     - `setFilter`: assign `currentFilter = filter`, call `renderTasks()`, call `renderFilterButtons()`
     - `getFilteredTasks`: return `tasks` (all), `tasks.filter(t => !t.completed)` (active), or `tasks.filter(t => t.completed)` (completed) based on `currentFilter`
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
-  - [ ] 6.2 Write property test for P6 — "all" filter returns everything
+  - [x] 6.2 Write property test for P6 — "all" filter returns everything
     - **Property 6: "all" filter displays every task regardless of status**
     - **Validates: Requirements 4.3**
     - Generate random task lists with mixed statuses; set `currentFilter = 'all'`; assert `getFilteredTasks().length === tasks.length`
     - Tag: `// Feature: todo-list-app, Property 6: ...`
-  - [ ] 6.3 Write property test for P7 — Status filters show only matching tasks
+  - [x] 6.3 Write property test for P7 — Status filters show only matching tasks
     - **Property 7: Status filters show only tasks matching their condition**
     - **Validates: Requirements 4.4, 4.5**
     - Generate random task lists; for `'active'` assert all results have `completed === false`; for `'completed'` assert all results have `completed === true`
     - Tag: `// Feature: todo-list-app, Property 7: ...`
 
-- [ ] 7. Implement DOM rendering (`renderTasks`, `renderFilterButtons`, `createTaskElement`)
+- [~] 7. Implement DOM rendering (`renderTasks`, `renderFilterButtons`, `createTaskElement`)
   - [ ] 7.1 Implement `createTaskElement(task)`
     - Create an `<li class="task-item">` with `data-id` attribute
     - Include a `<input type="checkbox" class="task-checkbox">` (checked if `task.completed`) with `aria-label` set to the task description

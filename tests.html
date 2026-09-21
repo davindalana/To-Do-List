@@ -415,5 +415,94 @@
         }
       })();
     </script>
+    <script>
+      // ─── Property 6: "all" filter returns every task ───────────────────────────
+      // Feature: todo-list-app, Property 6: "all" filter displays every task regardless of status
+      // For any task list with mixed completed/active statuses, setting currentFilter
+      // to 'all' and calling getFilteredTasks() must return the full tasks array.
+      // Validates: Requirements 4.3
+
+      (() => {
+        const title = 'P6 — "all" filter returns every task';
+
+        try {
+          const { getTasks, setTasks, setCurrentFilter, getFilteredTasks } = window.__TODO_INTERNALS__;
+
+          const taskRecord = fc.record({
+            id: fc.uuidV(4),
+            description: fc.string({ minLength: 1, maxLength: 50 }).filter(
+              (s) => s.trim().length > 0
+            ),
+            completed: fc.boolean(),
+            createdAt: fc.integer({ min: 0 }),
+          });
+
+          const taskArrayArb = fc.array(taskRecord, { minLength: 0, maxLength: 20 });
+
+          fc.assert(
+            fc.property(taskArrayArb, (taskArray) => {
+              resetState();
+              setTasks(taskArray.map((t) => ({ ...t })));
+              setCurrentFilter('all');
+
+              return getFilteredTasks().length === getTasks().length;
+            }),
+            { numRuns: 100, seed: 42 }
+          );
+
+          renderResult(title, true, '');
+        } catch (err) {
+          renderResult(title, false, err.message ?? String(err));
+        }
+      })();
+    </script>
+
+    <script>
+      // ─── Property 7: Status filters show only matching tasks ──────────────────
+      // Feature: todo-list-app, Property 7: Status filters show only tasks matching their condition
+      // For 'active', all returned tasks must have completed === false.
+      // For 'completed', all returned tasks must have completed === true.
+      // Validates: Requirements 4.4, 4.5
+
+      (() => {
+        const title = 'P7 — Status filters show only matching tasks';
+
+        try {
+          const { setTasks, setCurrentFilter, getFilteredTasks } = window.__TODO_INTERNALS__;
+
+          const taskRecord = fc.record({
+            id: fc.uuidV(4),
+            description: fc.string({ minLength: 1, maxLength: 50 }).filter(
+              (s) => s.trim().length > 0
+            ),
+            completed: fc.boolean(),
+            createdAt: fc.integer({ min: 0 }),
+          });
+
+          const taskArrayArb = fc.array(taskRecord, { minLength: 0, maxLength: 20 });
+
+          fc.assert(
+            fc.property(taskArrayArb, fc.constantFrom('active', 'completed'), (taskArray, filter) => {
+              resetState();
+              setTasks(taskArray.map((t) => ({ ...t })));
+              setCurrentFilter(filter);
+
+              const result = getFilteredTasks();
+
+              if (filter === 'active') {
+                return result.every((t) => t.completed === false);
+              } else {
+                return result.every((t) => t.completed === true);
+              }
+            }),
+            { numRuns: 100, seed: 42 }
+          );
+
+          renderResult(title, true, '');
+        } catch (err) {
+          renderResult(title, false, err.message ?? String(err));
+        }
+      })();
+    </script>
   </body>
 </html>
